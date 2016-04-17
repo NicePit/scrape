@@ -70,9 +70,6 @@ for number in range(1,1000):
     roster = ExtractProfile(number)
     for link in roster.links:
         page = ExtractData(link)
-        print page.picture
-        print page.tags
-        print page.keywords
 
     count += 1
     print count
