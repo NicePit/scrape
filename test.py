@@ -36,19 +36,19 @@ class ExtractData(object):
 
     def get_tags(self):
 
-        tag_dic = []
+        tag_list = []
         tags = self.soup.find_all("div", {"class": "left clear px10"})
         for item in tags:
             string = str(item)
-            m = re.compile('>(.*?)<', re.DOTALL).findall(string)
-            for thing in m:
+            n = re.compile('>(.*?)<', re.DOTALL).findall(string)
+            for thing in n:
                 if len(thing) > 2:
-                    tag_dic.append(item)
-        return tag_dic
+                    tag_list.append(thing)
+        return tag_list
 
     def get_keywords(self):
 
-        keywords_dic = []
+        keywords_list = []
         keywords = self.soup.find_all("div", {"class": "garmentLinks left"})
 
         for item in keywords:
@@ -56,21 +56,19 @@ class ExtractData(object):
             m = re.compile('>(.*?)<', re.DOTALL).findall(string)
             for thing in m:
                 if len(thing) > 2:
-                    keywords_dic.append(thing)
-        return keywords_dic
+                    keywords_list.append(thing)
+        return keywords_list
 
 
-    def wrapping(self):
-        pass
 
-
-count = 0
+dictionary = {}
 
 for number in range(1,1000):
     roster = ExtractProfile(number)
     for link in roster.links:
         page = ExtractData(link)
+        dictionary[page.picture] = page.tags, page.keywords
 
-    count += 1
-    print count
+    print "Pages scraped:", len(dictionary)
+
 
