@@ -27,6 +27,7 @@ class ExtractData(object):
         self.picture = self.get_pic()
         self.tags = self.get_tags()
         self.keywords = self.get_keywords()
+        self.wrap = self.wrapup()
 
     def get_pic(self):
 
@@ -59,6 +60,14 @@ class ExtractData(object):
                     keywords_list.append(thing)
         return keywords_list
 
+    def wrapup(self):
+        dicty = {}
+        dicty['url'] = self.picture
+        dicty['tags'] = self.tags
+        dicty['keywords'] = self.keywords
+        return dicty
+
+
 
 dictionary = {}
 
@@ -66,7 +75,7 @@ for number in range(1,1000):
     roster = ExtractProfile(number)
     for link in roster.links:
         page = ExtractData(link)
-        dictionary[page.picture] = page.tags, page.keywords
+        dictionary[number*roster.links.index(link)] = page.wrap
 
     print "Pages scraped:", len(dictionary)
 
