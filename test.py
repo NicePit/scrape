@@ -60,7 +60,6 @@ class ExtractData(object):
         return keywords_list
 
 
-
 dictionary = {}
 
 for number in range(1,1000):
