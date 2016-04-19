@@ -1,15 +1,19 @@
-import requests
 from bs4 import BeautifulSoup
+import requests
 import re
+import time
 
 
-class ExtractProfile(object):
+page_input = "http://www.chictopia.com/photo/show/1153934-the+calm+before+the+snow-black-ankle-boots-freda-salvador-boots-black-skinny-jeans-dl1961-jeans"
+
+
+class ExtractRoster(object):              # scraping random page of pages where input is integer in range (1:)
 
     def __init__(self, npage):
         self.url = "http://www.chictopia.com/browse/people/" + str(npage) + "?g=1"
         self.links = self.get_item_url()
 
-    def get_item_url(self):
+    def get_item_url(self):                # getting list of page urls (9 pages for each page of pages)
         links_list = []
         html_page = requests.get(self.url)
         soup = BeautifulSoup(html_page.content)
@@ -19,23 +23,52 @@ class ExtractProfile(object):
         return links_list
 
 
-class ExtractData(object):
+class ExtractData(object):                 # scraping page from page of pages
 
     def __init__(self, page_url):
-        html_page = requests.get(page_url)
-        self.soup = BeautifulSoup(html_page.content)
-        self.picture = self.get_pic()
-        self.tags = self.get_tags()
-        self.keywords = self.get_keywords()
-        self.wrap = self.wrapup()
+        items = []
+        try:
+            html_page = requests.get(page_url)              # requesting data from html
+            self.soup = BeautifulSoup(html_page.content)    # getting soup from the requested data
+            self.main_pic = self.get_pic()
+            self.add_pics = self.get_add_pics()
+            self.tags = self.get_tags()
+            self.soup_items = self.get_items()                   # items soup
 
-    def get_pic(self):
+            for item in self.soup_items:                         # looping through each item in self.soup_items
+                items.append(self.get_item_info(item))
+            self.items = items
+
+            self.wrap = self.wrap()
+        except Exception as exception:
+            print exception
+
+    def get_pic(self):                                       # getting main picture
 
         image = self.soup.find_all("img", {"itemprop": "image"})
-        picture = str(image[0]).split('"')[11]
-        return picture
+        picture_url = str(image[0]).split('"')[11]
+        return picture_url
 
-    def get_tags(self):
+    def get_add_pics(self):                     # getting additional pictures if there are any
+
+        data = self.soup.find_all("div", {"style": "display:inline-block"})
+
+        main_pic_number = re.findall(r'\d+', self.main_pic)[1]
+        add_pics = re.findall('src="(.+?)"', str(data))
+
+        add_pictures = []
+
+        for add in add_pics[1:]:
+            add_pic_number = (re.findall(r'\d+', add))[1]
+            replace = re.sub(main_pic_number, add_pic_number, self.main_pic)
+            add_pictures.append(replace)
+
+        if len(add_pictures) > 0:
+            return add_pictures
+        else:
+            return None
+
+    def get_tags(self):                                         # getting list of tags
 
         tag_list = []
         tags = self.soup.find_all("div", {"class": "left clear px10"})
@@ -47,36 +80,40 @@ class ExtractData(object):
                     tag_list.append(thing)
         return tag_list
 
-    def get_keywords(self):
+    def get_items(self):                                        # get html soup of clothes items
 
-        keywords_list = []
-        keywords = self.soup.find_all("div", {"class": "garmentLinks left"})
+        keywords_soup = self.soup.find_all("div", {"class": "garmentLinks left"})
+        print "\nItems found:", len(keywords_soup), "\n"
+        return keywords_soup
 
-        for item in keywords:
-            string = str(item)
-            m = re.compile('>(.*?)<', re.DOTALL).findall(string)
-            for thing in m:
-                if len(thing) > 2:
-                    keywords_list.append(thing)
-        return keywords_list
+    def get_item_info(self, item):                            # getting item information from soup
 
-    def wrapup(self):
-        dicty = {}
-        dicty['url'] = self.picture
-        dicty['tags'] = self.tags
-        dicty['keywords'] = self.keywords
-        return dicty
+        item_info = {}
+        reg_expr = re.compile('>(.*?)<', re.DOTALL).findall(str(item))
+        description = filter(lambda word: len(word)>2, reg_expr)
+        item_info["category"] = (description[-1].split(" "))[-1]
+        item_info["description"] = description
+
+        return item_info
+
+    def wrap(self):                                        # writing all info about image into dictionary
+        pic_info = {}
+        pic_info['image-url'] = self.main_pic
+        pic_info['tags'] = self.tags
+        pic_info['items'] = self.items
+        pic_info['other-images'] = self.add_pics
+
+        return pic_info
 
 
-
-dictionary = {}
-
-for number in range(1,1000):
-    roster = ExtractProfile(number)
-    for link in roster.links:
-        page = ExtractData(link)
-        dictionary[number*roster.links.index(link)] = page.wrap
-
-    print "Pages scraped:", len(dictionary)
+start = time.time()
+for i in range (1,100):
+    roster = ExtractRoster(i)
+    for some_link in roster.links:
+        start = time.time()
+        page = ExtractData(some_link)
+        print page.wrap
+        stop = time.time()
+        print "\nExecution time is", stop - start
 
 
