@@ -113,7 +113,7 @@ counter = 0
 list = []
 
 
-for count in range(1, 10):
+for count in range(1, 1000):
     page_of_pages = ExtractRoster(count)
     pages_list = page_of_pages.get_item_url()
     for item in pages_list:
