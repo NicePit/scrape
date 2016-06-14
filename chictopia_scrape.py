@@ -111,7 +111,7 @@ class ExtractData(object):                 # scraping page from page of pages
 
 counter = 0
 list = []
-
+exception_counter = 0
 
 for count in range(1, 1000):
     page_of_pages = ExtractRoster(count)
@@ -123,6 +123,7 @@ for count in range(1, 1000):
             db.stan_scrape.insert_one(item_info)
         except Exception as e:
             print e
+            exception_counter += 1
         continue
     counter += 1
-    print "Pages scraped: " + str(counter * 9)
+    print "Pages scraped: " + str(counter * 9 - exception_counter)
