@@ -119,6 +119,10 @@ for count in range(1, 1000):
     for item in pages_list:
         scrape_page = ExtractData(item)
         item_info = scrape_page.wrap
-        db.stan_scrape.insert_one(item_info)
+        try:
+            db.stan_scrape.insert_one(item_info)
+        except Exception as e:
+            print e
+        continue
     counter += 1
     print "Pages scraped: " + str(counter * 9)
