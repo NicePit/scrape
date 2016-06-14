@@ -1,25 +1,27 @@
 from bs4 import BeautifulSoup
 import requests
 import re
-import time
+from trendi.constants import db
 
 
-page_input = "http://www.chictopia.com/photo/show/1153934-the+calm+before+the+snow-black-ankle-boots-freda-salvador-boots-black-skinny-jeans-dl1961-jeans"
 
-
-class ExtractRoster(object):              # scraping random page of pages where input is integer in range (1:)
+class ExtractRoster(object):    # scraping random page of pages where input is integer in range (1:)
 
     def __init__(self, npage):
         self.url = "http://www.chictopia.com/browse/people/" + str(npage) + "?g=1"
-        self.links = self.get_item_url()
+        # self.links = self.get_item_url()
+        links_list = []
 
     def get_item_url(self):                # getting list of page urls (9 pages for each page of pages)
         links_list = []
-        html_page = requests.get(self.url)
-        soup = BeautifulSoup(html_page.content)
-        data = soup.find_all("div", {"class": "bold px12 white lh12 ellipsis"})
-        for item in data:
-            links_list.append("http://www.chictopia.com" + str(item).split('"')[3])
+        try:
+            html_page = requests.get(self.url)
+            soup = BeautifulSoup(html_page.content, "html.parser")
+            data = soup.find_all("div", {"class": "bold px12 white lh12 ellipsis"})
+            for item in data:
+                links_list.append("http://www.chictopia.com" + str(item).split('"')[3])
+        except Exception as exception:
+            print exception
         return links_list
 
 
@@ -29,7 +31,8 @@ class ExtractData(object):                 # scraping page from page of pages
         items = []
         try:
             html_page = requests.get(page_url)              # requesting data from html
-            self.soup = BeautifulSoup(html_page.content)    # getting soup from the requested data
+            self.page_url = page_url
+            self.soup = BeautifulSoup(html_page.content, "html.parser")    # getting soup from the requested data
             self.main_pic = self.get_pic()
             self.add_pics = self.get_add_pics()
             self.tags = self.get_tags()
@@ -83,7 +86,7 @@ class ExtractData(object):                 # scraping page from page of pages
     def get_items(self):                                        # get html soup of clothes items
 
         keywords_soup = self.soup.find_all("div", {"class": "garmentLinks left"})
-        print "\nItems found:", len(keywords_soup), "\n"
+        # print "\nItems found:", len(keywords_soup), "\n"
         return keywords_soup
 
     def get_item_info(self, item):                            # getting item information from soup
@@ -98,22 +101,24 @@ class ExtractData(object):                 # scraping page from page of pages
 
     def wrap(self):                                        # writing all info about image into dictionary
         pic_info = {}
+        pic_info['url'] = self.page_url
         pic_info['image-url'] = self.main_pic
         pic_info['tags'] = self.tags
         pic_info['items'] = self.items
         pic_info['other-images'] = self.add_pics
-
         return pic_info
 
 
-start = time.time()
-for i in range (1,100):
-    roster = ExtractRoster(i)
-    for some_link in roster.links:
-        start = time.time()
-        page = ExtractData(some_link)
-        print page.wrap
-        stop = time.time()
-        print "\nExecution time is", stop - start
+counter = 0
+list = []
 
 
+for count in range(1, 10):
+    page_of_pages = ExtractRoster(count)
+    pages_list = page_of_pages.get_item_url()
+    for item in pages_list:
+        scrape_page = ExtractData(item)
+        item_info = scrape_page.wrap
+        db.stan_scrape.insert_one(item_info)
+    counter += 1
+    print "Pages scraped: " + str(counter * 9)
