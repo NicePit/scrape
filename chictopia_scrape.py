@@ -113,7 +113,7 @@ counter = 0
 list = []
 exception_counter = 0
 
-for count in range(1001, 10000):
+for count in range(1001, 100000):
     page_of_pages = ExtractRoster(count)
     pages_list = page_of_pages.get_item_url()
     for item in pages_list:
