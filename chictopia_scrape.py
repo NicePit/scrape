@@ -113,7 +113,7 @@ counter = 0
 list = []
 exception_counter = 0
 
-for count in range(1001, 100000):
+for count in range(12000, 22000):
     page_of_pages = ExtractRoster(count)
     pages_list = page_of_pages.get_item_url()
     for item in pages_list:
@@ -127,4 +127,4 @@ for count in range(1001, 100000):
             exception_counter += 1
         continue
     counter += 1
-    print "Pages scraped: " + str(counter * 9 - exception_counter)
+    print "Pages scraped totally: " + str(counter * 9 - exception_counter)
