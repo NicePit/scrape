@@ -4,7 +4,6 @@ import re
 from trendi.constants import db
 
 
-
 class ExtractRoster(object):    # scraping random page of pages where input is integer in range (1:)
 
     def __init__(self, npage):
